@@ -11,6 +11,20 @@ interface CreditFiscalInvoiceProps {
 }
 
 export default function CreditFiscalInvoice({ invoice, company }: CreditFiscalInvoiceProps) {
+
+  const invoiceTitle = () => {
+    switch (invoice.type) {
+      case 'CREDIT':
+        return 'FACTURA DE CREDITO FISCAL'
+      case 'GOVERNMENTAL':
+        return 'FACTURA GUBERNAMENTAL'
+      case 'ENDCONSUMER':
+        return 'FACTURA DE CONSUMIDOR FINAL'
+      default:
+        return 'FACTURA DE CREDITO FISCAL'
+    }
+  }
+
   return (
     <Stack sx={{ alignItems: 'center', width: '100%', gap: 2, mb: 4, pt: '40px' }}>
       <Stack alignItems={'center'}>
@@ -77,7 +91,7 @@ export default function CreditFiscalInvoice({ invoice, company }: CreditFiscalIn
         fontSize: '14px',
         fontWeight: 'bold',
       }}>
-        FACTURA DE CREDITO FISCAL
+        {invoiceTitle()}
       </Box>
 
       <Box sx={{
@@ -111,19 +125,25 @@ export default function CreditFiscalInvoice({ invoice, company }: CreditFiscalIn
       </Box>
 
       <Box width={'100%'}>
-        <Typography>
+        <Typography sx={{
+          fontSize: '12px',
+        }}>
           <strong>CLIENTE O RAZON SOCIAL: </strong>{invoice.customer?.name}
         </Typography>
       </Box>
 
       <Box width={'100%'}>
-        <Typography>
+        <Typography sx={{
+          fontSize: '12px',
+        }}>
           <strong>RNC / CEDULA: </strong>{invoice.document}
         </Typography>
       </Box>
 
       <Box width={'100%'}>
-        <Typography>
+        <Typography sx={{
+          fontSize: '12px',
+        }}>
           <strong>DIRECCION: </strong>{invoice.customer?.address || 'N/A'}
         </Typography>
       </Box>

@@ -7,7 +7,7 @@ import { useInvoiceStore } from '../../store/useInvoiceStore'
 import { useCustomerStore } from '../../store/useCustomerStore'
 import { useDebounce } from '../../utils/useDebounce'
 import { formatPrice } from '../../utils/formatPrice'
-import { InvoiceType, type InvoiceItem } from '../../types'
+import { InvoiceType, type InvoiceItem, type Customer } from '../../types'
 import {
   Box,
   Button,
@@ -54,11 +54,18 @@ export default function CreateInvoice() {
   const { customers, fetchCustomers } = useCustomerStore()
   const [items, setItems] = useState<InvoiceItem[]>([])
   const [customerSearch, setCustomerSearch] = useState('')
-  const debouncedCustomerSearch = useDebounce(customerSearch, 600)
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const debouncedCustomerSearch = useDebounce(customerSearch, 100)
 
+  // Buscar clientes dinámicamente cuando el usuario escribe
   useEffect(() => {
-    fetchCustomers()
-  }, [fetchCustomers])
+    fetchCustomers({
+      page: 1,
+      max: 10, // Solo traer 10 resultados por rendimiento
+      search: debouncedCustomerSearch || undefined,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedCustomerSearch])
 
   const formik = useFormik({
     initialValues: {
@@ -124,14 +131,7 @@ export default function CreateInvoice() {
   const requiresCustomer = ['GOVERNMENTAL', 'QUOTE', 'CREDIT'].includes(formik.values.type)
   const requiresCustomerName = formik.values.type === 'BASIC'
 
-  // Filter customers based on debounced search
-  const filteredCustomers = customers.filter((customer) => {
-    const searchLower = debouncedCustomerSearch.toLowerCase()
-    return (
-      customer.name.toLowerCase().includes(searchLower) ||
-      customer.document.toLowerCase().includes(searchLower)
-    )
-  })
+  // Los clientes ya están filtrados por el backend según el search
 
   return (
     <Box>
@@ -194,10 +194,11 @@ export default function CreateInvoice() {
               {requiresCustomer && (
                 <Autocomplete
                   fullWidth
-                  options={filteredCustomers}
+                  options={customers}
                   getOptionLabel={(option) => `${option.document} - ${option.name}`}
-                  value={customers.find((c) => c.id === formik.values.customerId) || null}
+                  value={selectedCustomer}
                   onChange={(_, newValue) => {
+                    setSelectedCustomer(newValue)
                     formik.setFieldValue('customerId', newValue?.id)
                   }}
                   onInputChange={(_, newInputValue) => {
@@ -213,6 +214,8 @@ export default function CreateInvoice() {
                     />
                   )}
                   noOptionsText="No se encontraron clientes"
+                  filterOptions={(x) => x}
+                  isOptionEqualToValue={(option, value) => option.id === value?.id}
                 />
               )}
 

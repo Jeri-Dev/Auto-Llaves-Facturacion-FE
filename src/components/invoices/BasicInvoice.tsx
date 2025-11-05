@@ -93,6 +93,25 @@ export default function BasicInvoice({ invoice, company }: BasicInvoiceProps) {
                 </TableRow>
               )
             })}
+            {
+              Array.from({ length: Math.max(0, 4 - invoice.items.length) }).map((_, index) => (
+                <TableRow key={index + invoice.items.length}>
+                  <TableCell align="center" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px', height: '24px' }}>
+                    &nbsp;
+                  </TableCell>
+                  <TableCell align="center" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
+                    &nbsp;
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
+                    &nbsp;
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
+                    &nbsp;
+                  </TableCell>
+
+                </TableRow>
+              ))
+            }
 
             <TableRow>
               <TableCell colSpan={3} align="right" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
