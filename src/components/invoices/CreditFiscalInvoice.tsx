@@ -153,25 +153,25 @@ export default function CreditFiscalInvoice({ invoice, company }: CreditFiscalIn
         <Table size="small" sx={{ border: '1px solid #000' }}>
           <TableHead>
             <TableRow sx={{ bgcolor: '#a3a3a3' }}>
-              <TableCell align="center" sx={{ height: '50px', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
+              <TableCell align="center" sx={{ width: '80px', height: '50px', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
                 CANT.
               </TableCell>
-              <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
+              <TableCell align="center" sx={{ width: '80px', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
                 CODIGO
               </TableCell>
-              <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
+              <TableCell align="center" sx={{ width: '100%', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
                 DESCRIPCION
               </TableCell>
-              <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
+              <TableCell align="center" sx={{ width: '100px', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
                 PRECIO UNITARIO
               </TableCell>
-              <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
+              <TableCell align="center" sx={{ width: '100px', textWrap: 'wrap', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
                 IMPORTE SIN ITBIS
               </TableCell>
-              <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
+              <TableCell align="center" sx={{ width: '100px', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
                 ITBIS
               </TableCell>
-              <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
+              <TableCell align="center" sx={{ width: '130px', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
                 TOTAL
               </TableCell>
             </TableRow>
