@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { useInvoiceStore } from '../../store/useInvoiceStore'
 import { useDebounce } from '../../utils/useDebounce'
+import { formatPrice } from '../../utils/formatPrice'
 import { InvoiceType, type Invoice } from '../../types'
 import {
   Box,
@@ -231,14 +232,14 @@ export default function InvoiceList() {
                       />
                     </TableCell>
                     <TableCell align="right">
-                      RD$ {invoice.subtotal.toFixed(2)}
+                      {formatPrice(invoice.subtotal)}
                     </TableCell>
                     <TableCell align="right">
-                      RD$ {invoice.taxes.toFixed(2)}
+                      {formatPrice(invoice.taxes)}
                     </TableCell>
                     <TableCell align="right">
                       <Typography variant="body2" fontWeight={600}>
-                        RD$ {invoice.total.toFixed(2)}
+                        {formatPrice(invoice.total)}
                       </Typography>
                     </TableCell>
                     <TableCell>

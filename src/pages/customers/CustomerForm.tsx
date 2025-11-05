@@ -5,6 +5,7 @@ import * as Yup from 'yup'
 import { useCustomerStore } from '../../store/useCustomerStore'
 import { useCompanyStore } from '../../store/useCompanyStore'
 import { useDebounce } from '../../utils/useDebounce'
+import { maskPhone, unmaskPhone } from '../../utils/formatPhone'
 import {
   Box,
   Button,
@@ -49,10 +50,16 @@ export default function CustomerForm() {
     validationSchema: customerSchema,
     onSubmit: async (values) => {
       try {
+        // Guardar el teléfono sin formato (solo números)
+        const dataToSave = {
+          ...values,
+          phone: unmaskPhone(values.phone)
+        }
+
         if (isEditing) {
-          await updateCustomer(Number(id), values)
+          await updateCustomer(Number(id), dataToSave)
         } else {
-          await createCustomer(values)
+          await createCustomer(dataToSave)
         }
         navigate('/customers')
       } catch (error) {
@@ -155,9 +162,13 @@ export default function CustomerForm() {
                 label="Teléfono"
                 name="phone"
                 value={formik.values.phone}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const maskedValue = maskPhone(e.target.value)
+                  formik.setFieldValue('phone', maskedValue)
+                }}
                 onBlur={formik.handleBlur}
-                placeholder="Ingrese el teléfono"
+                placeholder="809-456-7890"
+                inputProps={{ maxLength: 12 }}
               />
 
               <TextField

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomerStore } from '../../store/useCustomerStore'
 import { useDebounce } from '../../utils/useDebounce'
+import { formatPhone } from '../../utils/formatPhone'
 import {
   Box,
   Button,
@@ -194,7 +195,7 @@ export default function CustomerList() {
                       </Typography>
                     </TableCell>
                     <TableCell>{customer.document}</TableCell>
-                    <TableCell>{customer.phone || '-'}</TableCell>
+                    <TableCell>{customer.phone ? formatPhone(customer.phone) : '-'}</TableCell>
                     <TableCell>{customer.address || '-'}</TableCell>
                     <TableCell align="center">
                       <Button

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useCompanyStore } from '../store/useCompanyStore'
+import { maskPhone, unmaskPhone } from '../utils/formatPhone'
 import {
   Box,
   Button,
@@ -54,10 +55,17 @@ export default function CompanySettings() {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        // Guardar los teléfonos sin formato (solo números)
+        const dataToSave = {
+          ...values,
+          phoneNumber: unmaskPhone(values.phoneNumber),
+          secondPhoneNumber: values.secondPhoneNumber ? unmaskPhone(values.secondPhoneNumber) : ''
+        }
+
         if (company) {
-          await updateCompany(company.id, values)
+          await updateCompany(company.id, dataToSave)
         } else {
-          await createCompany(values)
+          await createCompany(dataToSave)
         }
       } catch (error) {
         console.error('Error guardando empresa:', error)
@@ -147,10 +155,15 @@ export default function CompanySettings() {
                       label="Teléfono Principal *"
                       name="phoneNumber"
                       value={formik.values.phoneNumber}
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        const maskedValue = maskPhone(e.target.value)
+                        formik.setFieldValue('phoneNumber', maskedValue)
+                      }}
                       onBlur={formik.handleBlur}
                       error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
                       helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
+                      placeholder="809-456-7890"
+                      inputProps={{ maxLength: 12 }}
                     />
 
                     <TextField
@@ -158,8 +171,13 @@ export default function CompanySettings() {
                       label="Teléfono Secundario"
                       name="secondPhoneNumber"
                       value={formik.values.secondPhoneNumber}
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        const maskedValue = maskPhone(e.target.value)
+                        formik.setFieldValue('secondPhoneNumber', maskedValue)
+                      }}
                       onBlur={formik.handleBlur}
+                      placeholder="809-456-7890"
+                      inputProps={{ maxLength: 12 }}
                     />
                   </Stack>
                 </Stack>

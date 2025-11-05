@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { useInvoiceStore } from '../../store/useInvoiceStore'
 import { useCustomerStore } from '../../store/useCustomerStore'
 import { useDebounce } from '../../utils/useDebounce'
+import { formatPrice } from '../../utils/formatPrice'
 import { InvoiceType, type InvoiceItem } from '../../types'
 import {
   Box,
@@ -310,19 +311,19 @@ export default function CreateInvoice() {
                 <Box maxWidth={400} ml="auto">
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography color="text.secondary">Subtotal:</Typography>
-                    <Typography fontWeight={500}>RD$ {calculateSubtotal().toFixed(2)}</Typography>
+                    <Typography fontWeight={500}>{formatPrice(calculateSubtotal())}</Typography>
                   </Box>
                   {formik.values.type !== InvoiceType.BASIC && (
                     <Box display="flex" justifyContent="space-between" mb={2}>
                       <Typography color="text.secondary">ITBIS (18%):</Typography>
-                      <Typography fontWeight={500}>RD$ {calculateTaxes().toFixed(2)}</Typography>
+                      <Typography fontWeight={500}>{formatPrice(calculateTaxes())}</Typography>
                     </Box>
                   )}
 
                   <Divider sx={{ mb: 2 }} />
                   <Box display="flex" justifyContent="space-between">
                     <Typography variant="h6" fontWeight={700}>Total:</Typography>
-                    <Typography variant="h6" fontWeight={700}>RD$ {calculateTotal().toFixed(2)}</Typography>
+                    <Typography variant="h6" fontWeight={700}>{formatPrice(calculateTotal())}</Typography>
                   </Box>
                 </Box>
               </Paper>

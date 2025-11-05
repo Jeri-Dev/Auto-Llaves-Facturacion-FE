@@ -1,53 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { useInvoiceStore } from '../../store/useInvoiceStore'
 import { useCompanyStore } from '../../store/useCompanyStore'
 import type { Invoice } from '../../types'
-import dayjs from 'dayjs'
 import {
   Box,
   Button,
   Card,
   CardContent,
   Typography,
-  Stack,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Divider,
-  Grid as MuiGrid,
   CircularProgress,
-  Chip,
 } from '@mui/material'
-
-const Grid = MuiGrid
 import {
   ArrowBack as ArrowBackIcon,
   Print as PrintIcon,
-  Receipt as ReceiptIcon,
 } from '@mui/icons-material'
-
-const invoiceTypeLabels: Record<string, string> = {
-  GOVERNMENTAL: 'Gubernamental',
-  QUOTE: 'Cotización',
-  CREDIT: 'Crédito Fiscal',
-  BASIC: 'Básica',
-  ENDCONSUMER: 'Consumidor Final',
-}
-
-const invoiceTypeColors: Record<string, 'primary' | 'secondary' | 'success' | 'warning' | 'info'> = {
-  GOVERNMENTAL: 'primary',
-  QUOTE: 'info',
-  CREDIT: 'success',
-  BASIC: 'secondary',
-  ENDCONSUMER: 'warning',
-}
+import CreditFiscalInvoice from '../../components/invoices/CreditFiscalInvoice'
+import BasicInvoice from '../../components/invoices/BasicInvoice'
 
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>()
@@ -78,6 +47,19 @@ export default function InvoiceDetail() {
     )
   }
 
+  // Determinar qué componente de factura renderizar según el tipo
+  const renderInvoiceContent = () => {
+    switch (invoice.type) {
+      case 'BASIC':
+        return <BasicInvoice invoice={invoice} company={company} />
+      case 'CREDIT':
+      case 'GOVERNMENTAL':
+      case 'ENDCONSUMER':
+      default:
+        return <CreditFiscalInvoice invoice={invoice} company={company} />
+    }
+  }
+
   return (
     <Box>
       <Box display="flex" gap={2} mb={3} className="no-print">
@@ -97,202 +79,8 @@ export default function InvoiceDetail() {
       </Box>
 
       <Card>
-        <CardContent sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-          <Stack alignItems={'center'}>
-            <Typography variant='h5' sx={{
-              color: '#137ec5',
-              fontWeight: 800
-            }}>{company?.name}</Typography>
-            <Typography sx={{
-              color: '#d02323',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              fontStyle: 'italic'
-            }}>RNC. {company?.rnc}</Typography>
-          </Stack>
-          <Box sx={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'space-between'
-          }}>
-            <Typography sx={{
-              fontSize: '14px',
-              fontWeight: 'bold',
-            }}>
-              {company?.address.toUpperCase()}
-            </Typography>
-            <Typography sx={{
-              fontSize: '14px',
-              fontWeight: 'bold',
-            }}>
-              FECHA: {dayjs(invoice.createdAt).format('DD-MM-YYYY')}
-            </Typography>
-          </Box>
-          <Box sx={{
-            width: '100%',
-            display: 'flex',
-          }}>
-            <Typography sx={{
-              fontSize: '14px',
-              fontWeight: 'bold',
-            }}>
-              TEL. {company?.phoneNumber}
-            </Typography>
-            {
-              company?.secondPhoneNumber && (
-                <Typography sx={{
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                }}>
-                  {', CEL. '} {company?.secondPhoneNumber}
-                </Typography>
-              )
-            }
-          </Box>
-          <Box sx={{
-            width: '100%',
-            paddingY: '2px',
-            display: 'flex',
-            justifyContent: 'center',
-            backgroundColor: '#a3a3a3',
-            fontSize: '14px',
-            fontWeight: 'bold',
-          }}>
-            FACTURA DE CREDITO FISCAL
-          </Box>
-          <Box sx={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'end'
-          }}>
-            <Typography sx={{
-              fontSize: '14px',
-              fontWeight: 'bold',
-            }}>
-              NCF: <span style={{
-                fontStyle: 'italic', color: '#d02323',
-              }}>{invoice.ncf}</span>
-            </Typography>
-          </Box>
-          <Box sx={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'end'
-          }}>
-            <Typography sx={{
-              fontSize: '12px',
-              fontWeight: 'bold',
-              fontStyle: 'italic',
-              color: '#17557e'
-            }}>
-              VALIDA HASTA 31/12/2025
-            </Typography>
-          </Box>
-          <Box width={'100%'}>
-            <Typography>
-              <strong>CLIENTE O RAZON SOCIAL: </strong>{invoice.customer?.name}
-            </Typography>
-          </Box>
-          <Box width={'100%'}>
-            <Typography>
-              <strong>RNC / CEDULA: </strong>{invoice.document}
-            </Typography>
-          </Box>
-          <Box width={'100%'}>
-            <Typography>
-              <strong>DIRECCION: </strong>{invoice.customer?.address || 'N/A'}
-            </Typography>
-          </Box>
-
-          {/* Tabla de productos */}
-          <TableContainer sx={{ width: '100%', mt: 2 }}>
-            <Table size="small" sx={{ border: '1px solid #000' }}>
-              <TableHead >
-                <TableRow sx={{ bgcolor: '#a3a3a3' }} >
-                  <TableCell align="center" sx={{ height: '50px', border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    CANT.
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    CODIGO
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    DESCRIPCION
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    PRECIO UNITARIO
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    IMPORTE SIN ITBIS
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    ITBIS
-                  </TableCell>
-                  <TableCell align="center" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    TOTAL
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {invoice.items.map((item, index) => {
-                  const importeSinItbis = item.price * item.quantity
-                  const itbis = importeSinItbis * 0.18
-                  const total = importeSinItbis + itbis
-
-                  return (
-                    <TableRow key={index}>
-                      <TableCell align="center" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
-                        {item.quantity}
-                      </TableCell>
-                      <TableCell align="center" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
-                        {/* Código vacío por ahora */}
-                      </TableCell>
-                      <TableCell sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
-                        {item.name}
-                      </TableCell>
-                      <TableCell align="right" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
-                        {item.price.toFixed(2)}
-                      </TableCell>
-                      <TableCell align="right" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
-                        {importeSinItbis.toFixed(2)}
-                      </TableCell>
-                      <TableCell align="right" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
-                        {itbis.toFixed(2)}
-                      </TableCell>
-                      <TableCell align="right" sx={{ border: '1px solid #000', fontSize: '12px', fontWeight: 'bold', padding: '4px' }}>
-                        {total.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-
-                <TableRow>
-
-                  <TableCell colSpan={6} align="right" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    SUB.TOTAL
-                  </TableCell>
-                  <TableCell align="right" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    {invoice.subtotal.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={6} align="right" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    ITBIS
-                  </TableCell>
-                  <TableCell align="right" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    {invoice.taxes.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={6} align="right" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    TOTAL
-                  </TableCell>
-                  <TableCell align="right" sx={{ border: '1px solid #000', fontWeight: 'bold', fontSize: '12px', padding: '4px' }}>
-                    {invoice.total.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
+        <CardContent sx={{ p: 4, display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+          {renderInvoiceContent()}
 
           <Box sx={{
             width: '100%',
@@ -322,7 +110,6 @@ export default function InvoiceDetail() {
               </Typography>
             </Box>
 
-            {/* Firma Derecha - RECIBIDO */}
             <Box sx={{
               display: 'flex',
               flexDirection: 'column',
@@ -347,12 +134,12 @@ export default function InvoiceDetail() {
         </CardContent>
       </Card>
 
-
+      {/* Print styles */}
       <style>{`
         @media print {
           @page {
             size: A4;
-            margin: 1.5cm;
+            margin: 0;
           }
 
           html, body {
@@ -394,7 +181,6 @@ export default function InvoiceDetail() {
           }
 
           .MuiCardContent-root {
-            padding: 1cm !important;
           }
 
           /* Forzar colores de fondo */
