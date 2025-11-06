@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCustomerStore } from '../../store/useCustomerStore'
 import { useDebounce } from '../../utils/useDebounce'
 import { formatPhone } from '../../utils/formatPhone'
 import {
@@ -16,7 +15,6 @@ import {
   TablePagination,
   Typography,
   CircularProgress,
-  Alert,
   TextField,
   Card,
   CardContent,
@@ -27,10 +25,15 @@ import {
   MenuItem,
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material'
+import { toast } from 'sonner'
+import { getCustomersList } from '../../services/customer'
+import type { Customer, PaginatedResponse } from '../../types'
 
 export default function CustomerList() {
   const navigate = useNavigate()
-  const { customers, metadata, loading, error, fetchCustomers } = useCustomerStore()
+
+  const [data, setData] = useState<PaginatedResponse<Customer>>()
+  const [loading, setLoading] = useState(false)
 
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -42,15 +45,28 @@ export default function CustomerList() {
   const debouncedSearch = useDebounce(search, 600)
 
   useEffect(() => {
-    fetchCustomers({
-      page,
-      max: rowsPerPage,
-      search: debouncedSearch || undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      orderSort,
-    })
-  }, [page, rowsPerPage, debouncedSearch, startDate, endDate, orderSort, fetchCustomers])
+    const fetchCustomers = async () => {
+      setLoading(true)
+      try {
+        const data = await getCustomersList({
+          page,
+          max: rowsPerPage,
+          search: debouncedSearch,
+          startDate,
+          endDate,
+          orderSort,
+        })
+
+        setData(data)
+      } catch {
+        toast.error('Error al cargar los clientes')
+      } finally {
+        setLoading(false)
+      }
+
+    }
+    fetchCustomers()
+  }, [page, rowsPerPage, debouncedSearch, startDate, endDate, orderSort])
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage + 1)
@@ -70,21 +86,7 @@ export default function CustomerList() {
     setPage(1)
   }
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress size={60} />
-      </Box>
-    )
-  }
 
-  if (error) {
-    return (
-      <Box p={3}>
-        <Alert severity="error">{error}</Alert>
-      </Box>
-    )
-  }
 
   return (
     <Box>
@@ -157,7 +159,9 @@ export default function CustomerList() {
         </CardContent>
       </Card>
 
-      {customers.length === 0 && !loading ? (
+      {loading ? <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
+        <CircularProgress size={60} />
+      </Box> : data?.data.length === 0 && !loading ? (
         <Paper sx={{ p: 6, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             No hay clientes registrados
@@ -178,7 +182,7 @@ export default function CustomerList() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {customers.map((customer) => (
+                {data?.data.map((customer) => (
                   <TableRow
                     key={customer.id}
                     hover
@@ -212,10 +216,10 @@ export default function CustomerList() {
               </TableBody>
             </Table>
           </TableContainer>
-          {metadata && (
+          {data?.metadata && (
             <TablePagination
               component="div"
-              count={metadata.total}
+              count={data?.metadata.total}
               page={page - 1}
               onPageChange={handleChangePage}
               rowsPerPage={rowsPerPage}

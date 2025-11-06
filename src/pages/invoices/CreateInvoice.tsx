@@ -3,11 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { format } from 'date-fns'
-import { useInvoiceStore } from '../../store/useInvoiceStore'
-import { useCustomerStore } from '../../store/useCustomerStore'
-import { useDebounce } from '../../utils/useDebounce'
 import { formatPrice } from '../../utils/formatPrice'
-import { InvoiceType, type InvoiceItem, type Customer } from '../../types'
+import { InvoiceType, type InvoiceItem, type Customer, type PaginatedResponse } from '../../types'
 import {
   Box,
   Button,
@@ -31,6 +28,9 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material'
+import { toast } from 'sonner'
+import { getCustomersList } from '../../services/customer'
+import { createInvoice } from '../../services/invoice'
 
 const invoiceSchema = Yup.object({
   type: Yup.string().required('El tipo de factura es requerido'),
@@ -50,22 +50,34 @@ const invoiceSchema = Yup.object({
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
-  const { createInvoice, loading } = useInvoiceStore()
-  const { customers, fetchCustomers } = useCustomerStore()
   const [items, setItems] = useState<InvoiceItem[]>([])
-  const [customerSearch, setCustomerSearch] = useState('')
+  const [customerSearch, setCustomerSearch] = useState<string | undefined>()
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
-  const debouncedCustomerSearch = useDebounce(customerSearch, 100)
 
-  // Buscar clientes dinámicamente cuando el usuario escribe
+  const [customers, setCustomers] = useState<PaginatedResponse<Customer>>()
+  const [loading, setLoading] = useState<boolean>(false)
+
   useEffect(() => {
-    fetchCustomers({
-      page: 1,
-      max: 10, // Solo traer 10 resultados por rendimiento
-      search: debouncedCustomerSearch || undefined,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedCustomerSearch])
+    const fetchCustomers = async () => {
+      setLoading(true)
+      try {
+        const data = await getCustomersList({
+          search: customerSearch
+        })
+
+        setCustomers(data)
+      }
+      catch {
+        toast.error('Hubo un error al buscar los clientes')
+      }
+      finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCustomers()
+  }, [customerSearch])
+
 
   const formik = useFormik({
     initialValues: {
@@ -97,7 +109,6 @@ export default function CreateInvoice() {
   }
 
   const calculateTaxes = () => {
-    // Las facturas BASIC no tienen ITBIS
     if (formik.values.type === InvoiceType.BASIC) {
       return 0
     }
@@ -131,7 +142,6 @@ export default function CreateInvoice() {
   const requiresCustomer = ['GOVERNMENTAL', 'QUOTE', 'CREDIT'].includes(formik.values.type)
   const requiresCustomerName = formik.values.type === 'BASIC'
 
-  // Los clientes ya están filtrados por el backend según el search
 
   return (
     <Box>
@@ -191,10 +201,10 @@ export default function CreateInvoice() {
                 />
               </Stack>
 
-              {requiresCustomer && (
+              {requiresCustomer && customers && (
                 <Autocomplete
                   fullWidth
-                  options={customers}
+                  options={customers.data}
                   getOptionLabel={(option) => `${option.document} - ${option.name}`}
                   value={selectedCustomer}
                   onChange={(_, newValue) => {

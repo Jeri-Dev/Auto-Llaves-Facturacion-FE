@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import { useCustomerStore } from '../../store/useCustomerStore'
-import { useCompanyStore } from '../../store/useCompanyStore'
-import { useDebounce } from '../../utils/useDebounce'
 import { maskPhone, unmaskPhone } from '../../utils/formatPhone'
 import {
   Box,
@@ -21,6 +18,9 @@ import {
   ArrowBack as ArrowBackIcon,
   Search as SearchIcon,
 } from '@mui/icons-material'
+import { createCustomer, getCustomerById, updateCustomer } from '../../services/customer'
+import { toast } from 'sonner'
+import { getRncData } from '../../services/miscellaneous'
 
 const customerSchema = Yup.object({
   name: Yup.string().required('El nombre es requerido'),
@@ -34,11 +34,9 @@ export default function CustomerForm() {
   const { id } = useParams<{ id: string }>()
   const isEditing = Boolean(id)
 
-  const { createCustomer, updateCustomer, getCustomerById, loading } = useCustomerStore()
-  const { getRncData } = useCompanyStore()
   const [loadingRnc, setLoadingRnc] = useState(false)
-  const [rncSearchTerm, setRncSearchTerm] = useState('')
-  const debouncedRncSearch = useDebounce(rncSearchTerm, 600)
+
+  const [loading, setLoading] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -50,7 +48,6 @@ export default function CustomerForm() {
     validationSchema: customerSchema,
     onSubmit: async (values) => {
       try {
-        // Guardar el teléfono sin formato (solo números)
         const dataToSave = {
           ...values,
           phone: unmaskPhone(values.phone)
@@ -70,16 +67,26 @@ export default function CustomerForm() {
 
   useEffect(() => {
     if (isEditing && id) {
-      getCustomerById(Number(id)).then((customer) => {
-        formik.setValues({
-          name: customer.name,
-          document: customer.document,
-          phone: customer.phone || '',
-          address: customer.address || '',
-        })
-      })
+      const fetchCustomer = async () => {
+        setLoading(true)
+        try {
+          const customer = await getCustomerById(Number(id))
+          formik.setValues({
+            name: customer.name,
+            document: customer.document,
+            phone: customer.phone || '',
+            address: customer.address || '',
+          })
+        } catch (error) {
+          console.error('Error cargando cliente:', error)
+          toast.error('Error al cargar el cliente')
+        } finally {
+          setLoading(false)
+        }
+      }
+      fetchCustomer()
     }
-  }, [id, isEditing])
+  }, [])
 
   const handleSearchRnc = async () => {
     if (!formik.values.document) return
@@ -87,10 +94,8 @@ export default function CustomerForm() {
     setLoadingRnc(true)
     try {
       const rncData = await getRncData(formik.values.document)
-      formik.setFieldValue('name', rncData.name)
-      if (rncData.tradeName) {
-        formik.setFieldValue('name', rncData.tradeName)
-      }
+      formik.setFieldValue('name', rncData.business_name)
+
     } catch (error) {
       console.error('Error consultando RNC:', error)
       alert('No se encontró información para este RNC')
@@ -126,6 +131,12 @@ export default function CustomerForm() {
                 name="document"
                 value={formik.values.document}
                 onChange={formik.handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSearchRnc()
+                  }
+                }}
                 onBlur={formik.handleBlur}
                 placeholder="Ingrese RNC o cédula"
                 error={formik.touched.document && Boolean(formik.errors.document)}

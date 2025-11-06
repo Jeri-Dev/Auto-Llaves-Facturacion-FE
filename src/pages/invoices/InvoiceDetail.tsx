@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useInvoiceStore } from '../../store/useInvoiceStore'
-import { useCompanyStore } from '../../store/useCompanyStore'
-import type { Invoice } from '../../types'
+import type { Company, Invoice } from '../../types'
 import {
   Box,
   Button,
@@ -17,22 +15,39 @@ import {
 } from '@mui/icons-material'
 import CreditFiscalInvoice from '../../components/invoices/CreditFiscalInvoice'
 import BasicInvoice from '../../components/invoices/BasicInvoice'
+import { getInvoiceById } from '../../services/invoice'
+import { toast } from 'sonner'
+import { getCompany } from '../../services/company'
 
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getInvoiceById, loading } = useInvoiceStore()
-  const { company, fetchCurrentCompany } = useCompanyStore()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [company, setCompany] = useState<Company | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    fetchCurrentCompany()
-  }, [fetchCurrentCompany])
 
-  useEffect(() => {
-    if (id) {
-      getInvoiceById(Number(id)).then(setInvoice).catch(console.error)
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        if (id) {
+          const data = await getInvoiceById(Number(id))
+          setInvoice(data)
+        }
+
+        const company = await getCompany()
+        setCompany(company)
+      } catch {
+        toast.error('Hubo un error al buscar la informacion')
+      }
+      finally {
+        setLoading(false)
+      }
     }
+
+    fetchData()
+
   }, [id])
 
   const handlePrint = () => {

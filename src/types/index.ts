@@ -17,6 +17,13 @@ export interface Customer {
 	createdAt: string
 }
 
+export interface CreateCustomer {
+	name: string
+	document: string
+	phone?: string
+	address?: string
+}
+
 export interface InvoiceItem {
 	name: string
 	price: number
@@ -55,7 +62,7 @@ export interface Company {
 
 export interface RncData {
 	rnc: string
-	name: string
+	business_name: string
 	tradeName?: string
 	category?: string
 	paymentRegime?: string

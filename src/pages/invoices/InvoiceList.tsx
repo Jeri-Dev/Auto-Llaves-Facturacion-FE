@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
-import { useInvoiceStore } from '../../store/useInvoiceStore'
 import { useDebounce } from '../../utils/useDebounce'
 import { formatPrice } from '../../utils/formatPrice'
-import { InvoiceType, type Invoice } from '../../types'
+import { InvoiceType, type Invoice, type PaginatedResponse } from '../../types'
 import {
   Box,
   Paper,
@@ -24,7 +23,6 @@ import {
   Typography,
   Chip,
   CircularProgress,
-  Alert,
   Card,
   CardContent,
   Stack,
@@ -33,6 +31,8 @@ import {
   Add as AddIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material'
+import { toast } from 'sonner'
+import { getInvoicesList } from '../../services/invoice'
 
 const INVOICE_TYPE_LABELS: Record<InvoiceType, string> = {
   [InvoiceType.GOVERNMENTAL]: 'Gubernamental',
@@ -52,7 +52,6 @@ const INVOICE_TYPE_COLORS: Record<InvoiceType, 'primary' | 'secondary' | 'succes
 
 export default function InvoiceList() {
   const navigate = useNavigate()
-  const { invoices, metadata, loading, error, fetchInvoices } = useInvoiceStore()
 
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -61,18 +60,37 @@ export default function InvoiceList() {
   const [endDate, setEndDate] = useState('')
   const [orderSort, setOrderSort] = useState<'asc' | 'desc'>('desc')
 
+  const [invoices, setInvoices] = useState<PaginatedResponse<Invoice>>()
+  const [loading, setLoading] = useState<boolean>(false)
+
   const debouncedSearch = useDebounce(search, 600)
 
   useEffect(() => {
-    fetchInvoices({
-      page,
-      max: rowsPerPage,
-      search: debouncedSearch || undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      orderSort,
-    })
-  }, [page, rowsPerPage, debouncedSearch, startDate, endDate, orderSort, fetchInvoices])
+
+    console.log('hola')
+
+    const fetchInvoices = async () => {
+      setLoading(true)
+      try {
+        const data = await getInvoicesList({
+          page,
+          endDate,
+          max: rowsPerPage, orderSort, search, startDate
+        })
+
+        setInvoices(data)
+      }
+      catch {
+        toast.error('Hubo un error al buscar las facturas')
+      }
+      finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInvoices()
+
+  }, [page, rowsPerPage, debouncedSearch, startDate, endDate, orderSort])
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage + 1)
@@ -98,18 +116,10 @@ export default function InvoiceList() {
     return 'Consumidor Final'
   }
 
-  if (loading && !invoices.length) {
+  if (loading && !invoices) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
         <CircularProgress size={60} />
-      </Box>
-    )
-  }
-
-  if (error) {
-    return (
-      <Box p={3}>
-        <Alert severity="error">{error}</Alert>
       </Box>
     )
   }
@@ -185,7 +195,7 @@ export default function InvoiceList() {
         </CardContent>
       </Card>
 
-      {invoices.length === 0 && !loading ? (
+      {invoices?.data.length === 0 && !loading ? (
         <Paper sx={{ p: 6, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             No hay facturas registradas
@@ -208,7 +218,7 @@ export default function InvoiceList() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {invoices.map((invoice) => (
+                {invoices?.data.map((invoice) => (
                   <TableRow
                     key={invoice.id}
                     hover
@@ -260,10 +270,10 @@ export default function InvoiceList() {
               </TableBody>
             </Table>
           </TableContainer>
-          {metadata && (
+          {invoices?.metadata && (
             <TablePagination
               component="div"
-              count={metadata.total}
+              count={invoices.metadata.total}
               page={page - 1}
               onPageChange={handleChangePage}
               rowsPerPage={rowsPerPage}
