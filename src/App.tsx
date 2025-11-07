@@ -10,6 +10,7 @@ import CreateInvoice from './pages/invoices/CreateInvoice'
 import InvoiceDetail from './pages/invoices/InvoiceDetail'
 import CompanySettings from './pages/CompanySettings'
 import InventoryPage from './pages/inventory/Inventory'
+import { GlobalLoading } from './components/GlobalLoading'
 
 const theme = createTheme({
   palette: {
@@ -63,6 +64,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Toaster position="top-right" richColors expand={false} />
+      <GlobalLoading />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>

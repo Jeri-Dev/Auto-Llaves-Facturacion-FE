@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { useDebounce } from '../../utils/useDebounce'
 import { formatPrice } from '../../utils/formatPrice'
+import { useLoadingStore } from '../../store/loadingStore'
 import { InvoiceType, type Invoice, type PaginatedResponse } from '../../types'
 import {
   Box,
@@ -22,7 +23,6 @@ import {
   Button,
   Typography,
   Chip,
-  CircularProgress,
   Card,
   CardContent,
   Stack,
@@ -52,6 +52,7 @@ const INVOICE_TYPE_COLORS: Record<InvoiceType, 'primary' | 'secondary' | 'succes
 
 export default function InvoiceList() {
   const navigate = useNavigate()
+  const { showLoading, hideLoading } = useLoadingStore()
 
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -61,7 +62,6 @@ export default function InvoiceList() {
   const [orderSort, setOrderSort] = useState<'asc' | 'desc'>('desc')
 
   const [invoices, setInvoices] = useState<PaginatedResponse<Invoice>>()
-  const [loading, setLoading] = useState<boolean>(false)
 
   const debouncedSearch = useDebounce(search, 600)
 
@@ -70,7 +70,7 @@ export default function InvoiceList() {
     console.log('hola')
 
     const fetchInvoices = async () => {
-      setLoading(true)
+      showLoading('Cargando facturas...')
       try {
         const data = await getInvoicesList({
           page,
@@ -84,7 +84,7 @@ export default function InvoiceList() {
         toast.error('Hubo un error al buscar las facturas')
       }
       finally {
-        setLoading(false)
+        hideLoading()
       }
     }
 
@@ -114,14 +114,6 @@ export default function InvoiceList() {
     if (invoice.customer) return invoice.customer.name
     if (invoice.customerName) return invoice.customerName
     return 'Consumidor Final'
-  }
-
-  if (loading && !invoices) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress size={60} />
-      </Box>
-    )
   }
 
   return (
@@ -195,7 +187,7 @@ export default function InvoiceList() {
         </CardContent>
       </Card>
 
-      {invoices?.data.length === 0 && !loading ? (
+      {invoices?.data.length === 0 ? (
         <Paper sx={{ p: 6, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             No hay facturas registradas

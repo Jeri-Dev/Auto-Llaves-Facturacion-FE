@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { maskPhone, unmaskPhone } from '../../utils/formatPhone'
+import { useLoadingStore } from '../../store/loadingStore'
 import {
   Box,
   Button,
@@ -33,10 +34,9 @@ export default function CustomerForm() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const isEditing = Boolean(id)
+  const { showLoading, hideLoading } = useLoadingStore()
 
   const [loadingRnc, setLoadingRnc] = useState(false)
-
-  const [loading, setLoading] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -47,6 +47,7 @@ export default function CustomerForm() {
     },
     validationSchema: customerSchema,
     onSubmit: async (values) => {
+      showLoading(isEditing ? 'Actualizando cliente...' : 'Creando cliente...')
       try {
         const dataToSave = {
           ...values,
@@ -61,6 +62,8 @@ export default function CustomerForm() {
         navigate('/customers')
       } catch (error) {
         console.error('Error guardando cliente:', error)
+      } finally {
+        hideLoading()
       }
     },
   })
@@ -68,7 +71,7 @@ export default function CustomerForm() {
   useEffect(() => {
     if (isEditing && id) {
       const fetchCustomer = async () => {
-        setLoading(true)
+        showLoading('Cargando cliente...')
         try {
           const customer = await getCustomerById(Number(id))
           formik.setValues({
@@ -81,7 +84,7 @@ export default function CustomerForm() {
           console.error('Error cargando cliente:', error)
           toast.error('Error al cargar el cliente')
         } finally {
-          setLoading(false)
+          hideLoading()
         }
       }
       fetchCustomer()
@@ -199,9 +202,9 @@ export default function CustomerForm() {
                   type="submit"
                   variant="contained"
                   size="large"
-                  disabled={loading || !formik.isValid}
+                  disabled={!formik.isValid}
                 >
-                  {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear'}
+                  {isEditing ? 'Actualizar' : 'Crear'}
                 </Button>
                 <Button
                   variant="outlined"

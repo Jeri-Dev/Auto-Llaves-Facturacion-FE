@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDebounce } from '../../utils/useDebounce'
 import { formatPhone } from '../../utils/formatPhone'
+import { useLoadingStore } from '../../store/loadingStore'
 import {
   Box,
   Button,
@@ -14,7 +15,6 @@ import {
   TableRow,
   TablePagination,
   Typography,
-  CircularProgress,
   TextField,
   Card,
   CardContent,
@@ -31,9 +31,9 @@ import type { Customer, PaginatedResponse } from '../../types'
 
 export default function CustomerList() {
   const navigate = useNavigate()
+  const { showLoading, hideLoading } = useLoadingStore()
 
   const [data, setData] = useState<PaginatedResponse<Customer>>()
-  const [loading, setLoading] = useState(false)
 
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -46,7 +46,7 @@ export default function CustomerList() {
 
   useEffect(() => {
     const fetchCustomers = async () => {
-      setLoading(true)
+      showLoading('Cargando clientes...')
       try {
         const data = await getCustomersList({
           page,
@@ -61,7 +61,7 @@ export default function CustomerList() {
       } catch {
         toast.error('Error al cargar los clientes')
       } finally {
-        setLoading(false)
+        hideLoading()
       }
 
     }
@@ -159,9 +159,7 @@ export default function CustomerList() {
         </CardContent>
       </Card>
 
-      {loading ? <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
-        <CircularProgress size={60} />
-      </Box> : data?.data.length === 0 && !loading ? (
+      {data?.data.length === 0 ? (
         <Paper sx={{ p: 6, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             No hay clientes registrados

@@ -4,6 +4,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { format } from 'date-fns'
 import { formatPrice } from '../../utils/formatPrice'
+import { useLoadingStore } from '../../store/loadingStore'
 import { InvoiceType, type InvoiceItem, type Customer, type PaginatedResponse, type Inventory } from '../../types'
 import {
   Box,
@@ -51,6 +52,7 @@ const invoiceSchema = Yup.object({
 
 export default function CreateInvoice() {
   const navigate = useNavigate()
+  const { showLoading, hideLoading } = useLoadingStore()
   const [items, setItems] = useState<InvoiceItem[]>([])
   const [customerSearch, setCustomerSearch] = useState<string | undefined>()
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
@@ -124,6 +126,7 @@ export default function CreateInvoice() {
     },
     validationSchema: invoiceSchema,
     onSubmit: async (values) => {
+      showLoading('Creando factura...')
       try {
         await createInvoice({
           type: values.type,
@@ -135,6 +138,8 @@ export default function CreateInvoice() {
         navigate('/invoices')
       } catch (error) {
         console.error('Error creando factura:', error)
+      } finally {
+        hideLoading()
       }
     },
   })

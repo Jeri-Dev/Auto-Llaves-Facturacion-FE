@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Box, Button, Typography, CircularProgress } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { Add as AddIcon } from '@mui/icons-material'
 import { toast } from 'sonner'
 import { useDebounce } from '../../utils/useDebounce'
+import { useLoadingStore } from '../../store/loadingStore'
 import {
   getInventoryList,
   getInventoryById,
@@ -18,8 +19,8 @@ import InventoryDetailModal from './InventoryDetailModal'
 import DeleteConfirmDialog from './DeleteConfirmDialog'
 
 export default function InventoryPage() {
+  const { showLoading, hideLoading } = useLoadingStore()
   const [data, setData] = useState<PaginatedResponse<Inventory>>()
-  const [loading, setLoading] = useState(false)
 
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -52,7 +53,7 @@ export default function InventoryPage() {
   }, [page, rowsPerPage, debouncedSearch, startDate, endDate, orderSort])
 
   const fetchInventory = async () => {
-    setLoading(true)
+    showLoading('Cargando inventario...')
     try {
       const data = await getInventoryList({
         page,
@@ -66,7 +67,7 @@ export default function InventoryPage() {
     } catch {
       toast.error('Error al cargar el inventario')
     } finally {
-      setLoading(false)
+      hideLoading()
     }
   }
 
@@ -229,22 +230,16 @@ export default function InventoryPage() {
         }}
       />
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
-          <CircularProgress size={60} />
-        </Box>
-      ) : (
-        <InventoryTable
-          data={data}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          onView={openDetailModal}
-          onEdit={openEditModal}
-          onDelete={openDeleteDialog}
-        />
-      )}
+      <InventoryTable
+        data={data}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        onView={openDetailModal}
+        onEdit={openEditModal}
+        onDelete={openDeleteDialog}
+      />
 
       <InventoryFormModal
         open={formModalOpen}

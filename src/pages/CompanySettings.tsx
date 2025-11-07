@@ -5,6 +5,7 @@ import type { Company } from '../types'
 import { useFormik } from 'formik'
 import { toast } from 'sonner'
 import * as Yup from 'yup'
+import { useLoadingStore } from '../store/loadingStore'
 import {
   Box,
   Button,
@@ -14,7 +15,6 @@ import {
   Typography,
   Stack,
   Divider,
-  CircularProgress,
 } from '@mui/material'
 import {
   Business as BusinessIcon,
@@ -35,14 +35,13 @@ const companySchema = Yup.object({
 })
 
 export default function CompanySettings() {
-
+  const { showLoading, hideLoading } = useLoadingStore()
   const [company, setCompany] = useState<Company>()
   const [formLoading, setFormLoading] = useState<boolean>(false)
-  const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    setLoading(true)
     const fetchCompany = async () => {
+      showLoading('Cargando configuración...')
       await delay(500)
       try {
         const data = await getCompany()
@@ -50,8 +49,7 @@ export default function CompanySettings() {
       } catch {
         toast.error('Hubo un error al obtener la informacion')
       } finally {
-        setLoading(false)
-
+        hideLoading()
       }
     }
 
@@ -109,12 +107,7 @@ export default function CompanySettings() {
         </Box>
       </Box>
 
-      {
-        loading ? <Stack>
-          <Box display="flex" justifyContent="center" alignItems="center" width={'100%'} minHeight={'50vh'}>
-            <CircularProgress size={60} />
-          </Box>
-        </Stack> : <Card>
+      <Card>
           <CardContent sx={{ p: 4 }}>
             <form onSubmit={formik.handleSubmit}>
               <Stack spacing={4}>
@@ -270,7 +263,6 @@ export default function CompanySettings() {
             </form>
           </CardContent>
         </Card>
-      }
     </Box>
   )
 }

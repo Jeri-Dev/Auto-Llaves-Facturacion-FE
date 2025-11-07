@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { Company, Invoice } from '../../types'
+import { useLoadingStore } from '../../store/loadingStore'
 import {
   Box,
   Button,
   Card,
   CardContent,
   Typography,
-  CircularProgress,
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -22,14 +22,13 @@ import { getCompany } from '../../services/company'
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { showLoading, hideLoading } = useLoadingStore()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [company, setCompany] = useState<Company | null>(null)
-  const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-
     const fetchData = async () => {
-      setLoading(true)
+      showLoading('Cargando factura...')
       try {
         if (id) {
           const data = await getInvoiceById(Number(id))
@@ -42,7 +41,7 @@ export default function InvoiceDetail() {
         toast.error('Hubo un error al buscar la informacion')
       }
       finally {
-        setLoading(false)
+        hideLoading()
       }
     }
 
@@ -54,16 +53,10 @@ export default function InvoiceDetail() {
     window.print()
   }
 
-  if (loading || !invoice) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress size={60} />
-      </Box>
-    )
-  }
-
   // Determinar qué componente de factura renderizar según el tipo
   const renderInvoiceContent = () => {
+    if (!invoice) return null
+
     switch (invoice.type) {
       case 'BASIC':
         return <BasicInvoice invoice={invoice} company={company} />
@@ -74,6 +67,8 @@ export default function InvoiceDetail() {
         return <CreditFiscalInvoice invoice={invoice} company={company} />
     }
   }
+
+  if (!invoice) return null
 
   return (
     <Box>
