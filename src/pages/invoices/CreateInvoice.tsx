@@ -81,7 +81,11 @@ export default function CreateInvoice() {
       }
     }
 
-    fetchCustomers()
+    const timeoutId = setTimeout(() => {
+      fetchCustomers()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
   }, [customerSearch])
 
   useEffect(() => {
@@ -102,7 +106,11 @@ export default function CreateInvoice() {
       }
     }
 
-    fetchInventory()
+    const timeoutId = setTimeout(() => {
+      fetchInventory()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
   }, [inventorySearch])
 
 
