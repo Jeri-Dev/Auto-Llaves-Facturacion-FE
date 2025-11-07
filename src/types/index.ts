@@ -56,6 +56,9 @@ export interface Company {
 	nextCreditNCF: string
 	nextEndConsumerNCF: string
 	nextQuoteNumber: string
+	nextGovernmentalExpiration?: string
+	nextCreditExpiration?: string
+	nextEndConsumerExpiration?: string
 	createdAt: string
 	updatedAt: string
 }
@@ -102,6 +105,9 @@ export interface CreateCompanyDTO {
 	nextCreditNCF: string
 	nextEndConsumerNCF: string
 	nextQuoteNumber: number
+	nextGovernmentalExpiration?: string
+	nextCreditExpiration?: string
+	nextEndConsumerExpiration?: string
 }
 
 export interface UpdateCompanyDTO {
@@ -114,6 +120,9 @@ export interface UpdateCompanyDTO {
 	nextCreditNCF?: string
 	nextEndConsumerNCF?: string
 	nextQuoteNumber?: number
+	nextGovernmentalExpiration?: string
+	nextCreditExpiration?: string
+	nextEndConsumerExpiration?: string
 }
 
 export interface PaginationMetadata {

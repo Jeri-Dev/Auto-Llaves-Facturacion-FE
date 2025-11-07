@@ -25,6 +25,19 @@ export default function CreditFiscalInvoice({ invoice, company }: CreditFiscalIn
     }
   }
 
+  const invoiceExpiration = () => {
+    switch (invoice.type) {
+      case 'CREDIT':
+        return company?.nextCreditExpiration
+      case 'GOVERNMENTAL':
+        return company?.nextGovernmentalExpiration
+      case 'ENDCONSUMER':
+        return company?.nextEndConsumerExpiration
+      default:
+        return company?.nextCreditExpiration
+    }
+  }
+
   return (
     <Stack sx={{ alignItems: 'center', width: '100%', gap: 2, mb: 4, pt: '40px' }}>
       <Stack alignItems={'center'}>
@@ -120,7 +133,7 @@ export default function CreditFiscalInvoice({ invoice, company }: CreditFiscalIn
           fontStyle: 'italic',
           color: '#17557e'
         }}>
-          VALIDA HASTA 31/12/2025
+          VALIDA HASTA {dayjs(invoiceExpiration()).format('DD/MM/YYYY')}
         </Typography>
       </Box>
 
