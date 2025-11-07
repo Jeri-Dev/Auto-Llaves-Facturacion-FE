@@ -4,7 +4,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { format } from 'date-fns'
 import { formatPrice } from '../../utils/formatPrice'
-import { InvoiceType, type InvoiceItem, type Customer, type PaginatedResponse } from '../../types'
+import { InvoiceType, type InvoiceItem, type Customer, type PaginatedResponse, type Inventory } from '../../types'
 import {
   Box,
   Button,
@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner'
 import { getCustomersList } from '../../services/customer'
 import { createInvoice } from '../../services/invoice'
+import { getInventoryList } from '../../services/inventory'
 
 const invoiceSchema = Yup.object({
   type: Yup.string().required('El tipo de factura es requerido'),
@@ -57,6 +58,11 @@ export default function CreateInvoice() {
   const [customers, setCustomers] = useState<PaginatedResponse<Customer>>()
   const [loading, setLoading] = useState<boolean>(false)
 
+  const [inventorySearch, setInventorySearch] = useState<string | undefined>()
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<Inventory | null>(null)
+  const [inventoryItems, setInventoryItems] = useState<PaginatedResponse<Inventory>>()
+  const [loadingInventory, setLoadingInventory] = useState<boolean>(false)
+
   useEffect(() => {
     const fetchCustomers = async () => {
       setLoading(true)
@@ -77,6 +83,27 @@ export default function CreateInvoice() {
 
     fetchCustomers()
   }, [customerSearch])
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      setLoadingInventory(true)
+      try {
+        const data = await getInventoryList({
+          search: inventorySearch
+        })
+
+        setInventoryItems(data)
+      }
+      catch {
+        toast.error('Hubo un error al buscar el inventario')
+      }
+      finally {
+        setLoadingInventory(false)
+      }
+    }
+
+    fetchInventory()
+  }, [inventorySearch])
 
 
   const formik = useFormik({
@@ -137,6 +164,22 @@ export default function CreateInvoice() {
     newItems[index] = { ...newItems[index], [field]: value }
     setItems(newItems)
     formik.setFieldValue('items', newItems)
+  }
+
+  const addItemFromInventory = (inventoryItem: Inventory | null) => {
+    if (!inventoryItem) return
+
+    const newItem: InvoiceItem = {
+      name: inventoryItem.name,
+      price: inventoryItem.price,
+      quantity: 1,
+    }
+
+    setItems([...items, newItem])
+    formik.setFieldValue('items', [...items, newItem])
+    setSelectedInventoryItem(null)
+    setInventorySearch(undefined)
+    toast.success(`Item "${inventoryItem.name}" agregado`)
   }
 
   const requiresCustomer = ['GOVERNMENTAL', 'QUOTE', 'CREDIT'].includes(formik.values.type)
@@ -257,6 +300,39 @@ export default function CreateInvoice() {
                     Agregar Producto
                   </Button>
                 </Box>
+
+                {inventoryItems && (
+                  <Paper sx={{ p: 2, mb: 2, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>
+                    <Typography variant="body2" fontWeight={600} mb={2}>
+                      Agregar por código o nombre
+                    </Typography>
+                    <Autocomplete
+                      fullWidth
+                      size="small"
+
+                      options={inventoryItems.data}
+                      getOptionLabel={(option) => `${option.code} - ${option.name}`}
+                      value={selectedInventoryItem}
+                      onChange={(_, newValue) => {
+                        addItemFromInventory(newValue)
+                      }}
+                      onInputChange={(_, newInputValue) => {
+                        setInventorySearch(newInputValue)
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Buscar producto"
+                          placeholder="Buscar por código o nombre"
+                        />
+                      )}
+                      noOptionsText="No se encontraron productos"
+                      filterOptions={(x) => x}
+                      isOptionEqualToValue={(option, value) => option.id === value?.id}
+                      loading={loadingInventory}
+                    />
+                  </Paper>
+                )}
 
                 {items.length === 0 ? (
                   <Paper sx={{ p: 4, textAlign: 'center', border: '2px dashed', borderColor: 'divider' }}>

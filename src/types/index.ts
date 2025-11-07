@@ -129,3 +129,30 @@ export interface PaginatedResponse<T> {
 	metadata: PaginationMetadata
 	data: T[]
 }
+
+export interface Inventory {
+	id: number
+	code: string
+	name: string
+	price: number
+	createdAt: string
+	updatedAt: string
+}
+
+export interface InventoryItem {
+	code: string
+	name: string
+	price: number
+}
+
+export interface CreateInventoryDTO {
+	code: string
+	name: string
+	price: number
+}
+
+export interface UpdateInventoryDTO {
+	code?: string
+	name?: string
+	price?: number
+}

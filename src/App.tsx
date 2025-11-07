@@ -9,6 +9,7 @@ import InvoiceList from './pages/invoices/InvoiceList'
 import CreateInvoice from './pages/invoices/CreateInvoice'
 import InvoiceDetail from './pages/invoices/InvoiceDetail'
 import CompanySettings from './pages/CompanySettings'
+import InventoryPage from './pages/inventory/Inventory'
 
 const theme = createTheme({
   palette: {
@@ -74,6 +75,8 @@ function App() {
             <Route path="invoices" element={<InvoiceList />} />
             <Route path="invoices/new" element={<CreateInvoice />} />
             <Route path="invoices/:id" element={<InvoiceDetail />} />
+
+            <Route path="inventory" element={<InventoryPage />} />
 
             <Route path="settings" element={<CompanySettings />} />
 

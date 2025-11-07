@@ -23,6 +23,7 @@ import {
   People as PeopleIcon,
   Home as HomeIcon,
   Settings as SettingsIcon,
+  Inventory as InventoryIcon,
 } from '@mui/icons-material'
 
 const DRAWER_WIDTH = 240
@@ -31,6 +32,7 @@ const navigation = [
   { name: 'Inicio', href: '/', icon: HomeIcon },
   { name: 'Facturas', href: '/invoices', icon: ReceiptIcon },
   { name: 'Clientes', href: '/customers', icon: PeopleIcon },
+  { name: 'Inventario', href: '/inventory', icon: InventoryIcon },
   { name: 'Configuración', href: '/settings', icon: SettingsIcon },
 ]
 

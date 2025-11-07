@@ -12,6 +12,7 @@ import {
 import {
   Receipt as ReceiptIcon,
   People as PeopleIcon,
+  Inventory as InventoryIcon,
 } from '@mui/icons-material'
 
 export default function Home() {
@@ -26,7 +27,7 @@ export default function Home() {
         </Typography>
       </Box>
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} mb={4}>
         <Card elevation={2} sx={{ flex: 1 }}>
           <CardContent sx={{ p: 4 }}>
             <Box display="flex" alignItems="center" gap={2} mb={3}>
@@ -124,6 +125,51 @@ export default function Home() {
             </Box>
           </CardContent>
         </Card>
+      </Stack>
+
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
+        <Card elevation={2} sx={{ flex: 1 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box display="flex" alignItems="center" gap={2} mb={3}>
+              <Paper
+                sx={{
+                  p: 2,
+                  bgcolor: 'success.main',
+                  color: 'white',
+                  borderRadius: 2,
+                }}
+              >
+                <InventoryIcon fontSize="large" />
+              </Paper>
+              <Box>
+                <Typography variant="h5" component="h2" fontWeight={600}>
+                  Inventario
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Gestión de productos
+                </Typography>
+              </Box>
+            </Box>
+
+            <Typography variant="body1" color="text.secondary" mb={3}>
+              Administra tu inventario de productos con códigos, nombres y precios
+              para facilitar la facturación.
+            </Typography>
+
+            <Box display="flex" gap={2}>
+              <Button
+                component={Link}
+                to="/inventory"
+                variant="contained"
+                size="large"
+              >
+                Ver Inventario
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+
+        <Box sx={{ flex: 1 }} />
       </Stack>
     </Container>
   )
