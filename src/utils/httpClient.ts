@@ -18,10 +18,12 @@ export async function http<T>(
 	if (filters?.orderSort) params.append("orderSort", filters.orderSort)
 
 	const queryString = params.toString()
-
+	console.log({ url, queryString })
 	try {
 		const res = await fetch(
-			import.meta.env.VITE_API_URL + url + `?${queryString}`,
+			import.meta.env.VITE_API_URL +
+				url +
+				(queryString != "" ? `?${queryString}` : ""),
 			{
 				headers: {
 					"Content-Type": "application/json",
