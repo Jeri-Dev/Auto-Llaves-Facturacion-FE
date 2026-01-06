@@ -1,71 +1,89 @@
-import { toast } from "sonner"
-import type { PaginationFilters } from "../interfaces/filters"
+import { toast } from "sonner";
+import type { PaginationFilters } from "../interfaces/filters";
+
+type BackendError = {
+  message?: string | string[];
+  error?: string;
+  statusCode?: number;
+};
+
+const MUTATION_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 
 export async function http<T>(
-	url: string,
-	options?: RequestInit & { skipToast?: boolean },
-	filters?: PaginationFilters,
+  url: string,
+  options?: RequestInit & { skipToast?: boolean },
+  filters?: PaginationFilters
 ): Promise<T> {
-	const method = options?.method || "GET"
-	const skipToast = options?.skipToast || false
+  const method = options?.method?.toUpperCase() ?? "GET";
+  const skipToast = options?.skipToast ?? false;
+  const isMutation = MUTATION_METHODS.includes(method);
 
-	const params = new URLSearchParams()
-	if (filters?.page) params.append("page", filters.page.toString())
-	if (filters?.max) params.append("max", filters.max.toString())
-	if (filters?.search) params.append("search", filters.search)
-	if (filters?.startDate) params.append("startDate", filters.startDate)
-	if (filters?.endDate) params.append("endDate", filters.endDate)
-	if (filters?.orderSort) params.append("orderSort", filters.orderSort)
+  const params = new URLSearchParams();
+  if (filters?.page) params.append("page", filters.page.toString());
+  if (filters?.max) params.append("max", filters.max.toString());
+  if (filters?.search) params.append("search", filters.search);
+  if (filters?.startDate) params.append("startDate", filters.startDate);
+  if (filters?.endDate) params.append("endDate", filters.endDate);
+  if (filters?.orderSort) params.append("orderSort", filters.orderSort);
 
-	const queryString = params.toString()
-	console.log({ url, queryString })
-	try {
-		const res = await fetch(
-			import.meta.env.VITE_API_URL +
-				url +
-				(queryString != "" ? `?${queryString}` : ""),
-			{
-				headers: {
-					"Content-Type": "application/json",
-					...options?.headers,
-				},
-				...options,
-			},
-		)
+  const queryString = params.toString();
 
-		if (!res.ok) {
-			const errorText = await res.text()
-			const errorMessage = errorText || `HTTP Error: ${res.status}`
+  try {
+    const res = await fetch(
+      import.meta.env.VITE_API_URL +
+        url +
+        (queryString ? `?${queryString}` : ""),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...options?.headers,
+        },
+        ...options,
+      }
+    );
 
-			if (!skipToast) {
-				toast.error("Error", {
-					description: errorMessage,
-				})
-			}
+    if (!res.ok) {
+      let errorMessage = `HTTP Error ${res.status}`;
 
-			throw new Error(errorMessage)
-		}
+      try {
+        const errorBody: BackendError = await res.json();
 
-		const data = await res.json()
+        if (Array.isArray(errorBody.message)) {
+          errorMessage = errorBody.message.join(", ");
+        } else if (errorBody.message) {
+          errorMessage = errorBody.message;
+        } else if (errorBody.error) {
+          errorMessage = errorBody.error;
+        }
+      } catch {
+        const text = await res.text();
+        if (text) errorMessage = text;
+      }
 
-		if (!skipToast && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-			let message = "Operación exitosa"
+      throw new Error(errorMessage);
+    }
 
-			if (method === "POST") message = "Registro creado exitosamente"
-			if (method === "PUT" || method === "PATCH")
-				message = "Registro actualizado exitosamente"
-			if (method === "DELETE") message = "Registro eliminado exitosamente"
+    const data: T = await res.json();
 
-			toast.success(message)
-		}
+    if (!skipToast && isMutation) {
+      const successMessages: Record<string, string> = {
+        POST: "Registro creado exitosamente",
+        PUT: "Registro actualizado exitosamente",
+        PATCH: "Registro actualizado exitosamente",
+        DELETE: "Registro eliminado exitosamente",
+      };
 
-		return data
-	} catch (error) {
-		if (!skipToast && error instanceof Error) {
-			toast.error("Error", {
-				description: error.message,
-			})
-		}
-		throw error
-	}
+      toast.success(successMessages[method] ?? "Operación exitosa");
+    }
+
+    return data;
+  } catch (error) {
+    if (!skipToast && isMutation && error instanceof Error) {
+      toast.error("Error", {
+        description: error.message,
+      });
+    }
+
+    throw error;
+  }
 }

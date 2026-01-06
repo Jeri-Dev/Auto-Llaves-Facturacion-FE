@@ -1,81 +1,72 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import type { Company, Invoice } from '../../types'
-import { useLoadingStore } from '../../store/loadingStore'
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Typography,
-} from '@mui/material'
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import type { Company, Invoice } from "../../types";
+import { useLoadingStore } from "../../store/loadingStore";
+import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   Print as PrintIcon,
-} from '@mui/icons-material'
-import CreditFiscalInvoice from '../../components/invoices/CreditFiscalInvoice'
-import BasicInvoice from '../../components/invoices/BasicInvoice'
-import { getInvoiceById } from '../../services/invoice'
-import { toast } from 'sonner'
-import { getCompany } from '../../services/company'
+} from "@mui/icons-material";
+import CreditFiscalInvoice from "../../components/invoices/CreditFiscalInvoice";
+import BasicInvoice from "../../components/invoices/BasicInvoice";
+import { getInvoiceById } from "../../services/invoice";
+import { toast } from "sonner";
+import { getCompany } from "../../services/company";
 
 export default function InvoiceDetail() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { showLoading, hideLoading } = useLoadingStore()
-  const [invoice, setInvoice] = useState<Invoice | null>(null)
-  const [company, setCompany] = useState<Company | null>(null)
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { showLoading, hideLoading } = useLoadingStore();
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      showLoading('Cargando factura...')
+      showLoading("Cargando factura...");
       try {
         if (id) {
-          const data = await getInvoiceById(Number(id))
-          setInvoice(data)
+          const data = await getInvoiceById(Number(id));
+          setInvoice(data);
         }
 
-        const company = await getCompany()
-        setCompany(company)
+        const company = await getCompany();
+        setCompany(company);
       } catch {
-        toast.error('Hubo un error al buscar la informacion')
+        toast.error("Hubo un error al buscar la informacion");
+      } finally {
+        hideLoading();
       }
-      finally {
-        hideLoading()
-      }
-    }
+    };
 
-    fetchData()
-
-  }, [id])
+    fetchData();
+  }, [id]);
 
   const handlePrint = () => {
-    window.print()
-  }
+    window.print();
+  };
 
-  // Determinar qué componente de factura renderizar según el tipo
   const renderInvoiceContent = () => {
-    if (!invoice) return null
+    if (!invoice) return null;
 
     switch (invoice.type) {
-      case 'BASIC':
-        return <BasicInvoice invoice={invoice} company={company} />
-      case 'CREDIT':
-      case 'GOVERNMENTAL':
-      case 'ENDCONSUMER':
+      case "BASIC":
+        return <BasicInvoice invoice={invoice} company={company} />;
+      case "CREDIT":
+      case "GOVERNMENTAL":
+      case "ENDCONSUMER":
       default:
-        return <CreditFiscalInvoice invoice={invoice} company={company} />
+        return <CreditFiscalInvoice invoice={invoice} company={company} />;
     }
-  }
+  };
 
-  if (!invoice) return null
+  if (!invoice) return null;
 
   return (
     <Box>
       <Box display="flex" gap={2} mb={3} className="no-print">
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/invoices')}
+          onClick={() => navigate("/invoices")}
         >
           Volver
         </Button>
@@ -89,54 +80,77 @@ export default function InvoiceDetail() {
       </Box>
 
       <Card>
-        <CardContent sx={{ p: 4, display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+        <CardContent
+          sx={{
+            p: 4,
+            display: "flex",
+            justifyContent: "space-between",
+            flexDirection: "column",
+            gap: 2,
+            alignItems: "center",
+          }}
+        >
           {renderInvoiceContent()}
 
-          <Box sx={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'space-between',
-            mt: 6,
-            gap: 4
-          }}>
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              minWidth: '150px'
-            }}>
-              <Box sx={{
-                width: '100%',
-                borderBottom: '1px dashed #000',
-                mb: 1,
-                height: '50px'
-              }} />
-              <Typography sx={{
-                fontWeight: 'bold',
-                fontSize: '13px',
-                textAlign: 'center'
-              }}>
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
+              mt: 6,
+              gap: 4,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                minWidth: "150px",
+              }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  borderBottom: "1px dashed #000",
+                  mb: 1,
+                  height: "50px",
+                }}
+              />
+              <Typography
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "13px",
+                  textAlign: "center",
+                }}
+              >
                 DESPACHADO
               </Typography>
             </Box>
 
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              minWidth: '150px'
-            }}>
-              <Box sx={{
-                width: '100%',
-                borderBottom: '1px dashed #000',
-                mb: 1,
-                height: '50px'
-              }} />
-              <Typography sx={{
-                fontWeight: 'bold',
-                fontSize: '13px',
-                textAlign: 'center'
-              }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                minWidth: "150px",
+              }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  borderBottom: "1px dashed #000",
+                  mb: 1,
+                  height: "50px",
+                }}
+              />
+              <Typography
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: "13px",
+                  textAlign: "center",
+                }}
+              >
                 RECIBIDO
               </Typography>
             </Box>
@@ -211,5 +225,5 @@ export default function InvoiceDetail() {
         }
       `}</style>
     </Box>
-  )
+  );
 }

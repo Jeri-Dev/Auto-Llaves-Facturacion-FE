@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useFormik } from 'formik'
-import * as Yup from 'yup'
-import { maskPhone, unmaskPhone } from '../../utils/formatPhone'
-import { useLoadingStore } from '../../store/loadingStore'
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { maskPhone, unmaskPhone } from "../../utils/formatPhone";
+import { useLoadingStore } from "../../store/loadingStore";
 import {
   Box,
   Button,
@@ -14,116 +14,118 @@ import {
   Stack,
   IconButton,
   InputAdornment,
-} from '@mui/material'
+} from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   Search as SearchIcon,
-} from '@mui/icons-material'
-import { createCustomer, getCustomerById, updateCustomer } from '../../services/customer'
-import { toast } from 'sonner'
-import { getRncData } from '../../services/miscellaneous'
+} from "@mui/icons-material";
+import {
+  createCustomer,
+  getCustomerById,
+  updateCustomer,
+} from "../../services/customer";
+import { toast } from "sonner";
+import { getRncData } from "../../services/miscellaneous";
 
 const customerSchema = Yup.object({
-  name: Yup.string().required('El nombre es requerido'),
-  document: Yup.string().required('El documento es requerido'),
+  name: Yup.string().required("El nombre es requerido"),
+  document: Yup.string().required("El documento es requerido"),
   phone: Yup.string(),
   address: Yup.string(),
-})
+});
 
 export default function CustomerForm() {
-  const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
-  const isEditing = Boolean(id)
-  const { showLoading, hideLoading } = useLoadingStore()
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditing = Boolean(id);
+  const { showLoading, hideLoading } = useLoadingStore();
 
-  const [loadingRnc, setLoadingRnc] = useState(false)
+  const [loadingRnc, setLoadingRnc] = useState(false);
 
   const formik = useFormik({
     initialValues: {
-      name: '',
-      document: '',
-      phone: '',
-      address: '',
+      name: "",
+      document: "",
+      phone: "",
+      address: "",
     },
     validationSchema: customerSchema,
     onSubmit: async (values) => {
-      showLoading(isEditing ? 'Actualizando cliente...' : 'Creando cliente...')
+      showLoading(isEditing ? "Actualizando cliente..." : "Creando cliente...");
       try {
         const dataToSave = {
           ...values,
-          phone: unmaskPhone(values.phone)
-        }
+          phone: unmaskPhone(values.phone),
+        };
 
         if (isEditing) {
-          await updateCustomer(Number(id), dataToSave)
+          await updateCustomer(Number(id), dataToSave);
         } else {
-          await createCustomer(dataToSave)
+          await createCustomer(dataToSave);
         }
-        navigate('/customers')
+        navigate("/customers");
       } catch (error) {
-        console.error('Error guardando cliente:', error)
       } finally {
-        hideLoading()
+        hideLoading();
       }
     },
-  })
+  });
 
   useEffect(() => {
     if (isEditing && id) {
       const fetchCustomer = async () => {
-        showLoading('Cargando cliente...')
+        showLoading("Cargando cliente...");
         try {
-          const customer = await getCustomerById(Number(id))
+          const customer = await getCustomerById(Number(id));
           formik.setValues({
             name: customer.name,
             document: customer.document,
-            phone: customer.phone || '',
-            address: customer.address || '',
-          })
+            phone: customer.phone || "",
+            address: customer.address || "",
+          });
         } catch (error) {
-          console.error('Error cargando cliente:', error)
-          toast.error('Error al cargar el cliente')
+          toast.error("Error al cargar el cliente");
         } finally {
-          hideLoading()
+          hideLoading();
         }
-      }
-      fetchCustomer()
+      };
+      fetchCustomer();
     }
-  }, [])
+  }, []);
 
   const handleSearchRnc = async () => {
-    if (!formik.values.document) return
+    if (!formik.values.document) return;
 
-    setLoadingRnc(true)
+    setLoadingRnc(true);
     try {
-      const rncData = await getRncData(formik.values.document)
-      formik.setFieldValue('name', rncData.business_name)
-
+      const rncData = await getRncData(formik.values.document);
+      formik.setFieldValue("name", rncData.business_name);
     } catch (error) {
-      console.error('Error consultando RNC:', error)
-      alert('No se encontró información para este RNC')
+      alert("No se encontró información para este RNC");
     } finally {
-      setLoadingRnc(false)
+      setLoadingRnc(false);
     }
-  }
+  };
 
   return (
     <Box>
       <Button
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/customers')}
+        onClick={() => navigate("/customers")}
         sx={{ mb: 3 }}
       >
         Volver
       </Button>
 
-      <Card sx={{ maxWidth: 800, mx: 'auto' }}>
+      <Card sx={{ maxWidth: 800, mx: "auto" }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h5" component="h1" fontWeight={600} mb={1}>
-            {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
+            {isEditing ? "Editar Cliente" : "Nuevo Cliente"}
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={4}>
-            {isEditing ? 'Actualiza la información del cliente' : 'Registra un nuevo cliente'}
+            {isEditing
+              ? "Actualiza la información del cliente"
+              : "Registra un nuevo cliente"}
           </Typography>
 
           <form onSubmit={formik.handleSubmit}>
@@ -135,14 +137,16 @@ export default function CustomerForm() {
                 value={formik.values.document}
                 onChange={formik.handleChange}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleSearchRnc()
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSearchRnc();
                   }
                 }}
                 onBlur={formik.handleBlur}
                 placeholder="Ingrese RNC o cédula"
-                error={formik.touched.document && Boolean(formik.errors.document)}
+                error={
+                  formik.touched.document && Boolean(formik.errors.document)
+                }
                 helperText={formik.touched.document && formik.errors.document}
                 InputProps={{
                   endAdornment: (
@@ -177,8 +181,8 @@ export default function CustomerForm() {
                 name="phone"
                 value={formik.values.phone}
                 onChange={(e) => {
-                  const maskedValue = maskPhone(e.target.value)
-                  formik.setFieldValue('phone', maskedValue)
+                  const maskedValue = maskPhone(e.target.value);
+                  formik.setFieldValue("phone", maskedValue);
                 }}
                 onBlur={formik.handleBlur}
                 placeholder="809-456-7890"
@@ -204,12 +208,12 @@ export default function CustomerForm() {
                   size="large"
                   disabled={!formik.isValid}
                 >
-                  {isEditing ? 'Actualizar' : 'Crear'}
+                  {isEditing ? "Actualizar" : "Crear"}
                 </Button>
                 <Button
                   variant="outlined"
                   size="large"
-                  onClick={() => navigate('/customers')}
+                  onClick={() => navigate("/customers")}
                 >
                   Cancelar
                 </Button>
@@ -219,5 +223,5 @@ export default function CustomerForm() {
         </CardContent>
       </Card>
     </Box>
-  )
+  );
 }
