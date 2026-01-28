@@ -24,12 +24,14 @@ import {
   Home as HomeIcon,
   Settings as SettingsIcon,
   Inventory as InventoryIcon,
+  TrendingUp as SalesIcon,
 } from '@mui/icons-material'
 
 const DRAWER_WIDTH = 240
 
 const navigation = [
   { name: 'Inicio', href: '/', icon: HomeIcon },
+  { name: 'Ventas', href: '/sales', icon: SalesIcon },
   { name: 'Facturas', href: '/invoices', icon: ReceiptIcon },
   { name: 'Clientes', href: '/customers', icon: PeopleIcon },
   { name: 'Inventario', href: '/inventory', icon: InventoryIcon },

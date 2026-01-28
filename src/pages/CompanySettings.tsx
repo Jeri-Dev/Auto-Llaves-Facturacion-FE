@@ -1,11 +1,11 @@
-import { createCompany, getCompany, updateCompany } from "../services/company";
-import { maskPhone, unmaskPhone } from "../utils/formatPhone";
-import { useEffect, useState } from "react";
-import type { Company } from "../types";
-import { useFormik } from "formik";
-import { toast } from "sonner";
-import * as Yup from "yup";
-import { useLoadingStore } from "../store/loadingStore";
+import { createCompany, getCompany, updateCompany } from "../services/company"
+import { maskPhone, unmaskPhone } from "../utils/formatPhone"
+import { useEffect, useState } from "react"
+import type { Company } from "../types"
+import { useFormik } from "formik"
+import { toast } from "sonner"
+import * as Yup from "yup"
+import { useLoadingStore } from "../store/loadingStore"
 import {
   Box,
   Button,
@@ -15,17 +15,17 @@ import {
   Typography,
   Stack,
   Divider,
-} from "@mui/material";
+} from "@mui/material"
 import {
   Business as BusinessIcon,
   Save as SaveIcon,
-} from "@mui/icons-material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
-import { delay } from "../utils/delay";
-import { useNavigate } from "react-router-dom";
+} from "@mui/icons-material"
+import { DatePicker } from "@mui/x-date-pickers/DatePicker"
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"
+import dayjs from "dayjs"
+import { delay } from "../utils/delay"
+import { useNavigate } from "react-router-dom"
 
 const companySchema = Yup.object({
   name: Yup.string().required("El nombre es requerido"),
@@ -46,31 +46,31 @@ const companySchema = Yup.object({
   nextGovernmentalExpiration: Yup.date().nullable(),
   nextCreditExpiration: Yup.date().nullable(),
   nextEndConsumerExpiration: Yup.date().nullable(),
-});
+})
 
 export default function CompanySettings() {
-  const { showLoading, hideLoading } = useLoadingStore();
-  const [company, setCompany] = useState<Company>();
-  const [formLoading, setFormLoading] = useState<boolean>(false);
+  const { showLoading, hideLoading } = useLoadingStore()
+  const [company, setCompany] = useState<Company>()
+  const [formLoading, setFormLoading] = useState<boolean>(false)
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchCompany = async () => {
-      showLoading("Cargando configuración...");
-      await delay(500);
+      showLoading("Cargando configuración...")
+      await delay(500)
       try {
-        const data = await getCompany();
-        setCompany(data);
+        const data = await getCompany()
+        setCompany(data)
       } catch {
-        toast.error("Hubo un error al obtener la informacion");
+        toast.error("Hubo un error al obtener la informacion")
       } finally {
-        hideLoading();
+        hideLoading()
       }
-    };
+    }
 
-    void fetchCompany();
-  }, []);
+    void fetchCompany()
+  }, [])
 
   const formik = useFormik({
     initialValues: {
@@ -98,7 +98,7 @@ export default function CompanySettings() {
     validationSchema: companySchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
-      setFormLoading(true);
+      setFormLoading(true)
       try {
         const dataToSave = {
           ...values,
@@ -115,21 +115,22 @@ export default function CompanySettings() {
           nextEndConsumerExpiration: values.nextEndConsumerExpiration
             ? values.nextEndConsumerExpiration.toISOString()
             : undefined,
-        };
-
-        if (company) {
-          updateCompany(dataToSave);
-        } else {
-          await createCompany(dataToSave);
         }
 
-        navigate("/");
-      } catch (error) {
+        if (company) {
+          updateCompany(dataToSave)
+        } else {
+          await createCompany(dataToSave)
+        }
+
+        navigate("/")
+      } catch {
+        toast.error("Hubo un error al guardar la información")
       } finally {
-        setFormLoading(false);
+        setFormLoading(false)
       }
     },
-  });
+  })
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -206,8 +207,8 @@ export default function CompanySettings() {
                         name="phoneNumber"
                         value={formik.values.phoneNumber}
                         onChange={(e) => {
-                          const maskedValue = maskPhone(e.target.value);
-                          formik.setFieldValue("phoneNumber", maskedValue);
+                          const maskedValue = maskPhone(e.target.value)
+                          formik.setFieldValue("phoneNumber", maskedValue)
                         }}
                         onBlur={formik.handleBlur}
                         error={
@@ -228,11 +229,11 @@ export default function CompanySettings() {
                         name="secondPhoneNumber"
                         value={formik.values.secondPhoneNumber}
                         onChange={(e) => {
-                          const maskedValue = maskPhone(e.target.value);
+                          const maskedValue = maskPhone(e.target.value)
                           formik.setFieldValue(
                             "secondPhoneNumber",
                             maskedValue
-                          );
+                          )
                         }}
                         onBlur={formik.handleBlur}
                         placeholder="809-456-7890"
@@ -420,8 +421,8 @@ export default function CompanySettings() {
                     {formLoading
                       ? "Guardando..."
                       : company
-                      ? "Actualizar Configuración"
-                      : "Crear Empresa"}
+                        ? "Actualizar Configuración"
+                        : "Crear Empresa"}
                   </Button>
                 </Box>
               </Stack>
@@ -430,5 +431,5 @@ export default function CompanySettings() {
         </Card>
       </Box>
     </LocalizationProvider>
-  );
+  )
 }

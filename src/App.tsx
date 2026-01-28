@@ -10,6 +10,7 @@ import CreateInvoice from './pages/invoices/CreateInvoice'
 import InvoiceDetail from './pages/invoices/InvoiceDetail'
 import CompanySettings from './pages/CompanySettings'
 import InventoryPage from './pages/inventory/Inventory'
+import SalesPage from './pages/sales/SalesPage'
 import { GlobalLoading } from './components/GlobalLoading'
 
 const theme = createTheme({
@@ -79,6 +80,8 @@ function App() {
             <Route path="invoices/:id" element={<InvoiceDetail />} />
 
             <Route path="inventory" element={<InventoryPage />} />
+
+            <Route path="sales" element={<SalesPage />} />
 
             <Route path="settings" element={<CompanySettings />} />
 

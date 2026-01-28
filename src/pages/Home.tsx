@@ -1,176 +1,143 @@
-import { Link } from 'react-router-dom'
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Container,
-  Stack,
-  Typography,
-  Paper,
-} from '@mui/material'
-import {
-  Receipt as ReceiptIcon,
-  People as PeopleIcon,
-  Inventory as InventoryIcon,
-} from '@mui/icons-material'
+import { useState, useEffect } from 'react'
+import { Button } from '@mui/material'
+import { Add as AddIcon } from '@mui/icons-material'
+import { toast } from 'sonner'
+import { TodaySalesCard, MonthComparisonCard } from '../components/sales/DashboardCards'
+import { YearlySalesChart } from '../components/sales/YearlySalesChart'
+import { TodaySalesList } from '../components/sales/TodaySalesList'
+import { CreateSaleForm } from '../components/sales/CreateSaleForm'
+import { getTodaySales, getMonthSales, getYearlySales, createSale, deleteSale } from '../services/sales'
+import type {
+  TodaySalesResponse,
+  MonthSalesResponse,
+  YearlySalesResponse,
+  CreateSaleDTO,
+  Sale,
+} from '../types/sales'
 
 export default function Home() {
+  const [todaySales, setTodaySales] = useState<TodaySalesResponse | null>(null)
+  const [monthSales, setMonthSales] = useState<MonthSalesResponse | null>(null)
+  const [yearlySales, setYearlySales] = useState<YearlySalesResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    setIsLoading(true)
+    try {
+      const [today, month, yearly] = await Promise.all([
+        getTodaySales(),
+        getMonthSales(),
+        getYearlySales(),
+      ])
+
+      setTodaySales(today)
+      setMonthSales(month)
+      setYearlySales(yearly)
+    } catch (error) {
+      toast.error('Error al cargar los datos del dashboard')
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCreateSale = async (data: CreateSaleDTO) => {
+    setIsSubmitting(true)
+    try {
+      await createSale(data)
+      toast.success('Venta registrada exitosamente')
+      setIsFormOpen(false)
+      await loadDashboardData()
+    } catch (error) {
+      toast.error('Error al registrar la venta')
+      console.error('Error creating sale:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteSale = async (sale: Sale) => {
+    if (!confirm(`¿Estás seguro de eliminar la venta #${sale.id} (${sale.item})?`)) {
+      return
+    }
+
+    try {
+      await deleteSale(sale.id)
+      toast.success('Venta eliminada exitosamente')
+      await loadDashboardData()
+    } catch (error) {
+      toast.error('Error al eliminar la venta')
+      console.error('Error deleting sale:', error)
+    }
+  }
+
   return (
-    <Container maxWidth="lg">
-      <Box textAlign="center" mb={8}>
-        <Typography variant="h3" component="h1" fontWeight={700} mb={2}>
-          Sistema de Facturación
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Gestiona tus facturas y clientes de manera sencilla y profesional
-        </Typography>
-      </Box>
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard de Ventas</h1>
+          <p className="text-muted-foreground">
+            Resumen de ventas y métricas principales
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsFormOpen(true)}
+          variant="contained"
+          startIcon={<AddIcon />}
+        >
+          Registrar Venta
+        </Button>
+      </div>
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} mb={4}>
-        <Card elevation={2} sx={{ flex: 1 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={3}>
-              <Paper
-                sx={{
-                  p: 2,
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  borderRadius: 2,
-                }}
-              >
-                <ReceiptIcon fontSize="large" />
-              </Paper>
-              <Box>
-                <Typography variant="h5" component="h2" fontWeight={600}>
-                  Facturas
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Gestión de facturación
-                </Typography>
-              </Box>
-            </Box>
+      {/* Cards Grid */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {todaySales && (
+          <TodaySalesCard
+            totalAmount={todaySales.totalAmount}
+            salesCount={todaySales.salesCount}
+            averageTicket={todaySales.averageTicket}
+          />
+        )}
 
-            <Typography variant="body1" color="text.secondary" mb={3}>
-              Crea y gestiona facturas de diferentes tipos: gubernamental, crédito fiscal,
-              cotizaciones, básicas y consumidor final.
-            </Typography>
+        {monthSales && (
+          <MonthComparisonCard
+            currentMonth={monthSales.currentMonth}
+            previousMonth={monthSales.previousMonth}
+            comparison={monthSales.comparison}
+            isLoading={isLoading}
+          />
+        )}
+      </div>
 
-            <Box display="flex" gap={2}>
-              <Button
-                component={Link}
-                to="/invoices/new"
-                variant="contained"
-                size="large"
-              >
-                Crear Factura
-              </Button>
-              <Button
-                component={Link}
-                to="/invoices"
-                variant="outlined"
-                size="large"
-              >
-                Ver Listado
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
+      {/* Yearly Chart */}
+      {yearlySales && (
+        <YearlySalesChart data={yearlySales} isLoading={isLoading} />
+      )}
 
-        <Card elevation={2} sx={{ flex: 1 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={3}>
-              <Paper
-                sx={{
-                  p: 2,
-                  bgcolor: 'secondary.main',
-                  color: 'white',
-                  borderRadius: 2,
-                }}
-              >
-                <PeopleIcon fontSize="large" />
-              </Paper>
-              <Box>
-                <Typography variant="h5" component="h2" fontWeight={600}>
-                  Clientes
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Gestión de clientes
-                </Typography>
-              </Box>
-            </Box>
+      {/* Today's Sales List */}
+      {todaySales && (
+        <TodaySalesList
+          sales={todaySales.sales}
+          isLoading={isLoading}
+          onDelete={handleDeleteSale}
+        />
+      )}
 
-            <Typography variant="body1" color="text.secondary" mb={3}>
-              Administra tu base de datos de clientes con información completa
-              incluyendo RNC, teléfono y dirección.
-            </Typography>
-
-            <Box display="flex" gap={2}>
-              <Button
-                component={Link}
-                to="/customers/new"
-                variant="contained"
-                size="large"
-              >
-                Crear Cliente
-              </Button>
-              <Button
-                component={Link}
-                to="/customers"
-                variant="outlined"
-                size="large"
-              >
-                Ver Listado
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      </Stack>
-
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
-        <Card elevation={2} sx={{ flex: 1 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={3}>
-              <Paper
-                sx={{
-                  p: 2,
-                  bgcolor: 'success.main',
-                  color: 'white',
-                  borderRadius: 2,
-                }}
-              >
-                <InventoryIcon fontSize="large" />
-              </Paper>
-              <Box>
-                <Typography variant="h5" component="h2" fontWeight={600}>
-                  Inventario
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Gestión de productos
-                </Typography>
-              </Box>
-            </Box>
-
-            <Typography variant="body1" color="text.secondary" mb={3}>
-              Administra tu inventario de productos con códigos, nombres y precios
-              para facilitar la facturación.
-            </Typography>
-
-            <Box display="flex" gap={2}>
-              <Button
-                component={Link}
-                to="/inventory"
-                variant="contained"
-                size="large"
-              >
-                Ver Inventario
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Box sx={{ flex: 1 }} />
-      </Stack>
-    </Container>
+      {/* Create Sale Form Modal */}
+      {isFormOpen && (
+        <CreateSaleForm
+          onSubmit={handleCreateSale}
+          onCancel={() => setIsFormOpen(false)}
+          isLoading={isSubmitting}
+        />
+      )}
+    </div>
   )
 }
